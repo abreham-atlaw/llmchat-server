@@ -25,13 +25,7 @@ def create_request():
 
     collection.insert_one(request_data)
 
-    while True:
-        request_data = collection.find_one({'id': request_data['id']})
-        if request_data['response']:
-            break
-        print("Waiting...")
-
-    return jsonify({'response': request_data['response']})
+    return jsonify({'request_id': request_data['id']})
 
 
 @app.route('/api/request/get', methods=['GET'])
@@ -57,6 +51,18 @@ def respond_request():
 
     collection.update_one({'id': request_id}, {'$set': {'response': response, 'response_datetime': now}})
     return jsonify({'message': 'Response recorded'})
+
+
+@app.route('/api/request/fetch/<request_id>', methods=['GET'])
+def fetch_response(request_id):
+    request_data = collection.find_one({'id': request_id})
+
+    if request_data:
+        response = request_data['response']
+        return jsonify({'response': response})
+    else:
+        return jsonify({'message': 'Request not found'}), 404
+
 
 if __name__ == '__main__':
     app.run()
