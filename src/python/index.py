@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
+from bson import json_util
 from datetime import datetime
 
 app = Flask(__name__)
-client = MongoClient('mongodb+srv://abrehamatlaw:kRqIp2ZVP0w4di7T@cluster0.trf60oq.mongodb.net/?retryWrites=true&w=majority')
+client = MongoClient('mongodb+srv://abrehamatlaw:7nQdrVrc5Jopp18F@cluster0.trf60oq.mongodb.net/?retryWrites=true&w=majority')
 db = client['llmchat']
 collection = db['requests']
 
@@ -28,6 +29,7 @@ def create_request():
         request_data = collection.find_one({'id': request_data['id']})
         if request_data['response']:
             break
+        print("Waiting...")
 
     return jsonify({'response': request_data['response']})
 
@@ -40,9 +42,10 @@ def get_request():
         request_id = request_data['id']
         now = datetime.now()
         collection.update_one({'id': request_id}, {'$set': {'lock_datetime': now}})
+        request_data.pop("_id")
         return jsonify(request_data)
     else:
-        return jsonify({'message': 'No available requests'})
+        return jsonify({'message': 'No available requests'}), 404
 
 
 @app.route('/api/request/respond', methods=['POST'])
