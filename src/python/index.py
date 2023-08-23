@@ -11,11 +11,13 @@ collection = db['requests']
 @app.route('/api/request/new', methods=['POST'])
 def create_request():
     data = request.get_json()
-    query = data['query']
+    params = data['params']
+    model = data["model"]
     now = datetime.now()
 
     request_data = {
-        'query': query,
+        'params': params,
+        'model': model,
         'id': str(collection.count_documents({}) + 1),  # Generate unique ID
         'response': None,
         'lock_datetime': None,
@@ -30,8 +32,8 @@ def create_request():
 
 @app.route('/api/request/get', methods=['GET'])
 def get_request():
-    request_data = collection.find_one({'lock_datetime': None, 'response_datetime': None})
-
+    model = request.args.get("model")
+    request_data = collection.find_one({'lock_datetime': None, 'response_datetime': None, 'model': model})
     if request_data:
         request_id = request_data['id']
         now = datetime.now()
